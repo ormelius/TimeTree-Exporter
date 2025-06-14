@@ -159,7 +159,7 @@ def main():
     	ical_bytes = cal.to_ical()
     	ical_str = ical_bytes.decode("utf-8")
     	# Fix: UNTIL=YYYYMMDD → UNTIL=YYYYMMDDT000000
-    	ical_str = re.sub(r"(UNTIL=\d{8})(?=[;\r\n])", r"\1T000000", ical_str)
+    	ical_str = re.sub(r"(UNTIL=\d{8})(?=[;\r\n])", r"\1T000000Z", ical_str)
     	f.write(ical_str.encode("utf-8"))
     	logger.info(
         	"The .ics calendar file is saved to %s", os.path.abspath(args.output)
