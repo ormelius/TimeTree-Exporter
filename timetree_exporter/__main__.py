@@ -154,12 +154,15 @@ def main():
     )
 
     # Write calendar to file
-    with open(args.output, "wb") as f:  # Path Traversal Vulnerability if on a server
-        f.write(cal.to_ical())
-        logger.info(
-            "The .ics calendar file is saved to %s", os.path.abspath(args.output)
-        )
-
+    with open(args.output, "wb") as f:
+    	ical_bytes = cal.to_ical()
+    	ical_str = ical_bytes.decode("utf-8")
+    	# Fix: UNTIL=YYYYMMDD → UNTIL=YYYYMMDDT000000
+    	ical_str = re.sub(r"(UNTIL=\d{8})(?=[;\r\n])", r"\1T000000", ical_str)
+    	f.write(ical_str.encode("utf-8"))
+    	logger.info(
+        	"The .ics calendar file is saved to %s", os.path.abspath(args.output)
+    	)
 
 if __name__ == "__main__":
     main()
