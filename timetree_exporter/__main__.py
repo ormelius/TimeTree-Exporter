@@ -5,6 +5,7 @@ This module login in to TimeTree and converts Timetree events to iCal format.
 import argparse
 import logging
 import os
+import re
 from getpass import getpass
 from icalendar import Calendar
 from timetree_exporter import TimeTreeEvent, ICalEventFormatter, __version__
