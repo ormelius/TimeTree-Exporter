@@ -74,7 +74,7 @@ if __name__ == "__main__":
     if args.location:
         payload["location"] = args.location
 
-    session_id = login(args.email, args.password)
+    session_id = login(email, password)
     session = requests.Session()
     session.cookies.set("_session_id", session_id)
     csrf = get_csrf_token(session, args.calendar_code, args.event_id)
