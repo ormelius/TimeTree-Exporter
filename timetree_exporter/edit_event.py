@@ -56,6 +56,8 @@ if __name__ == "__main__":
     parser.add_argument("--title", help="New event title")
     parser.add_argument("--note", help="New note content")
     parser.add_argument("--location", help="New event location")
+    parser.add_argument("--location-lat", type=float, help="Latitude of location")
+    parser.add_argument("--location-lon", type=float, help="Longitude of location")
     args = parser.parse_args()
 
     # Get login credentials from args or environment
@@ -72,7 +74,11 @@ if __name__ == "__main__":
     if args.note:
         payload["note"] = args.note
     if args.location:
-        payload["location"] = args.location
+    payload["location"] = args.location
+    if args.location_lat:
+    payload["location_lat"] = args.location_lat
+    if args.location_lon:
+    payload["location_lon"] = args.location_lon
 
     session_id = login(email, password)
     session = requests.Session()
