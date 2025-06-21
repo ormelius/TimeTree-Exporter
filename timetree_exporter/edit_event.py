@@ -6,6 +6,7 @@ import argparse
 import logging
 import requests
 import os
+import subprocess
 
 from timetree_exporter.api.auth import login
 from timetree_exporter.api.const import API_BASEURI, API_USER_AGENT
@@ -84,4 +85,11 @@ if __name__ == "__main__":
     session = requests.Session()
     session.cookies.set("_session_id", session_id)
     csrf = get_csrf_token(session, args.calendar_code, args.event_id)
-    update_event(session, csrf, args.calendar_id, args.event_id, args.calendar_code, payload)
+    status = update_event(session, csrf, args.calendar_id, args.event_id, args.calendar_code, payload)
+
+    if status == 200:
+        logger.info("✅ Event successfully updated. Export is now initiated.")
+        try:
+            subprocess.run(["/app/run.sh"], check=True)
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Export failed: {e}")
