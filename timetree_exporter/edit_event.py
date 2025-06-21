@@ -74,11 +74,11 @@ if __name__ == "__main__":
     if args.note:
         payload["note"] = args.note
     if args.location:
-    payload["location"] = args.location
+        payload["location"] = args.location
     if args.location_lat:
-    payload["location_lat"] = args.location_lat
+        payload["location_lat"] = args.location_lat
     if args.location_lon:
-    payload["location_lon"] = args.location_lon
+        payload["location_lon"] = args.location_lon
 
     session_id = login(email, password)
     session = requests.Session()
