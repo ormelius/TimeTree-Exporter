@@ -6,16 +6,17 @@ for formatting TimeTree events into iCalendar format.
 import logging
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from icalendar import Event, vRecur, vDate, vDatetime, vGeo, Alarm
-from icalendar.prop import vDDDLists
+
+from icalendar import Alarm, Event, vDate, vDatetime, vGeo, vRecur
 from icalendar.parser import Contentline
+from icalendar.prop import vDDDLists
+
 from timetree_exporter.event import (
     TimeTreeEvent,
-    TimeTreeEventType,
     TimeTreeEventCategory,
+    TimeTreeEventType,
 )
 from timetree_exporter.utils import convert_timestamp_to_datetime
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +26,41 @@ class ICalEventFormatter:
     Class for formatting TimeTree events into iCalendar format.
     """
 
-    def __init__(self, time_tree_event: TimeTreeEvent):
+    def __init__(self, time_tree_event: TimeTreeEvent, label_name: str = None, color: str = None):
         self.time_tree_event = time_tree_event
+        self.label_name = label_name
+        self._color = color
+
+    @property
+    def color(self):
+        """Return the validated color value."""
+        if self._color is None:
+            return None
+        if self._is_valid_hex_color(self._color):
+            return self._color
+        logger.warning("Invalid color format: %s. Expected hex color (e.g., #RRGGBB)", self._color)
+        return None
+
+    @staticmethod
+    def _is_valid_hex_color(color: str) -> bool:
+        logger.debug(f"Validating color: {color}")
+        """Validate hex color format."""
+        if not isinstance(color, str):
+            return False
+        color = color.strip()
+        # Check for hex color format: #RRGGBB or #RRGGBBAA
+        if color.startswith("#") and len(color) in (7, 9):
+            try:
+                int(color[1:], 16)
+                return True
+            except ValueError:
+                return False
+        return False
+
+    @property
+    def categories(self):
+        """Return the label name as CATEGORIES."""
+        return self.label_name
 
     @property
     def uid(self):
@@ -42,18 +76,14 @@ class ICalEventFormatter:
     def created(self):
         """Return the creation time of the event."""
         return vDatetime(
-            convert_timestamp_to_datetime(
-                self.time_tree_event.created_at / 1000, ZoneInfo("UTC")
-            )
+            convert_timestamp_to_datetime(self.time_tree_event.created_at / 1000, ZoneInfo("UTC"))
         )
 
     @property
     def last_modified(self):
         """Return the last modification time of the event."""
         return vDatetime(
-            convert_timestamp_to_datetime(
-                self.time_tree_event.updated_at / 1000, ZoneInfo("UTC")
-            )
+            convert_timestamp_to_datetime(self.time_tree_event.updated_at / 1000, ZoneInfo("UTC"))
         )
 
     @property
@@ -64,23 +94,14 @@ class ICalEventFormatter:
     @property
     def location(self):
         """Return the location of the event."""
-        return (
-            self.time_tree_event.location
-            if self.time_tree_event.location != ""
-            else None
-        )
+        return self.time_tree_event.location if self.time_tree_event.location != "" else None
 
     @property
     def geo(self):
         """Return the geolocation of the event."""
-        if (
-            self.time_tree_event.location_lat is None
-            or self.time_tree_event.location_lon is None
-        ):
+        if self.time_tree_event.location_lat is None or self.time_tree_event.location_lon is None:
             return None
-        return vGeo(
-            (self.time_tree_event.location_lat, self.time_tree_event.location_lon)
-        )
+        return vGeo((self.time_tree_event.location_lat, self.time_tree_event.location_lon))
 
     @property
     def url(self):
@@ -112,7 +133,8 @@ class ICalEventFormatter:
             convert_timestamp_to_datetime(
                 time / 1000,
                 ZoneInfo(timezone),
-            )
+            ),
+            params={"TZID": timezone} if timezone != "UTC" else {},
         )
 
     @property
@@ -208,6 +230,10 @@ class ICalEventFormatter:
             event.add("description", self.description)
         if self.related_to:
             event.add("related-to", self.related_to)
+        if self.categories:
+            event.add("categories", [self.categories])
+        if self.color:
+            event.add("color", self.color)
 
         for alarm in self.alarms:
             event.add_component(alarm)

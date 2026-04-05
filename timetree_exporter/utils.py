@@ -1,9 +1,11 @@
 """Utility functions for Timetree Exporter"""
 
+import getpass
+import inspect
 import json
-import os
 import logging
 from datetime import datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 def get_events_from_file(file_path) -> list:
     """Fetch events from Timetree response file"""
     try:
-        with open(file_path, "r", encoding="UTF-8") as response_file:
+        with Path(file_path).open(encoding="UTF-8") as response_file:
             response_data = json.load(response_file)
             if "events" in response_data:
                 return response_data["events"]
@@ -32,19 +34,46 @@ def paths_to_filelist(paths: list) -> list:
     """Converts a list of paths to a list of files"""
     filenames = []
     for path in paths:
-        if os.path.isdir(path):
-            filenames += [os.path.join(path, file) for file in os.listdir(path)]
-        elif os.path.isfile(path):
+        path_obj = Path(path)
+        if path_obj.is_dir():
+            filenames += [str(file) for file in path_obj.iterdir()]
+        elif path_obj.is_file():
             filenames.append(path)
         else:
             logger.error("Invalid path: %s", path)
     return filenames
 
 
-def convert_timestamp_to_datetime(timestamp, tzinfo=ZoneInfo("UTC")):
+def convert_timestamp_to_datetime(timestamp, tzinfo=None):
     """
     Convert timestamp to datetime for both positive and negative timestamps on different platforms.
     """
+    if tzinfo is None:
+        tzinfo = ZoneInfo("UTC")
     if timestamp >= 0:
         return datetime.fromtimestamp(timestamp, tzinfo)
     return datetime.fromtimestamp(0, tzinfo) + timedelta(seconds=int(timestamp))
+
+
+def safe_getpass(prompt="Password: ", echo_char=None):
+    """Safely get a password from the user, supporting echo_char for Python 3.14+.
+    If echo_char is not supported, it falls back to the pwinput module if echo_char is needed.
+    """
+    sig = inspect.signature(getpass.getpass)
+    if "echo_char" in sig.parameters:
+        # Python 3.14+ supports echo_char
+        return getpass.getpass(  # pylint: disable=E1123
+            prompt=prompt, echo_char=echo_char
+        )
+    if echo_char is not None:
+        # Use pwinput for echo_char support in older versions
+        try:
+            from pwinput import pwinput  # pylint: disable=C0415
+
+            return pwinput(prompt=prompt, mask=echo_char)
+        except ImportError as exc:
+            logger.error("pwinput module is required for echo_char support.")
+            raise ImportError("Please install pwinput to use echo_char functionality.") from exc
+    else:
+        # Fallback for older versions
+        return getpass.getpass(prompt=prompt)

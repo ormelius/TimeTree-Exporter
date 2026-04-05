@@ -10,7 +10,15 @@ A Tool for Exporting TimeTree Calendar and Convert to iCal format(.ics) \
 This script works by scraping the TimeTree web app and converting the data to iCal format.
 (The .ics file can then be imported into other calendar apps such as Google Calendar, Apple Calendar, Outlook Calendar, etc.)
 
+> [!Warning]
+> This is an independent, community-built project and is not affiliated with or endorsed by TimeTree, Inc.
+> It uses unofficial, reverse-engineered TimeTree web APIs, which may change or stop working at any time without notice. As a result, the tool could break unexpectedly.
+> Please use it responsibly—sending too many requests in a short period may lead to rate limiting, temporary blocks, or other restrictions from TimeTree.
+
 ## Installation
+
+> [!Note]
+> Timetree Exporter requires Python 3.10 or later.
 
 If you are on mac, you can install it using brew:
 
@@ -18,13 +26,11 @@ If you are on mac, you can install it using brew:
 brew install eoleedi/tap/timetree-exporter
 ```
 
-You can also install it using pip or pipx:
+You can also install it using uvx, pip, or pipx:
 
 ```bash
 pip install timetree-exporter
 ```
-
-Timetree Exporter requires Python 3.9 or later.
 
 ## Usage
 
@@ -36,17 +42,18 @@ This will prompt you to enter your TimeTree email and password and select the ca
 
 Then, you can import the ics file to your calendar app.
 
-💡 Note: You are advised to import the ICS file into a separate calendar (e.g., Google Calendar) so that if anything goes wrong, you can simply delete the calendar and reimport it.
+> [!Note]
+>  💡 You are advised to import the ICS file into a separate calendar (e.g., Google Calendar) so that if anything goes wrong, you can simply delete the calendar and reimport it.
 
 ### Advanced Usage
 
-- You can specify your email address using the `-e` option.
+- Specify your email address using the `-e` option.
 
     ```bash
     timetree-exporter -e email@example.com
     ```
 
-- You can specify the calendar code using the `-c` or `--calendar_code` option.
+- Specify the calendar code using the `-c` or `--calendar_code` option.
 
     ```bash
     timetree-exporter -c calendar_code
@@ -61,9 +68,61 @@ Then, you can import the ics file to your calendar app.
   export TIMETREE_PASSWORD=password
   ```
 
+- Create separate ICS files for each label with a custom output directory.
+
+   ```bash
+   timetree-exporter --split-by-label
+   ```
+
+   This creates individual ICS files for each label (e.g., `timetree_work.ics`, `timetree_personal.ics`).
+
 ## Limitations
 
 Alarms(Alerts) can't be imported to Google Calendar through iCal format due to Google's bug.
+
+## Development
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+
+### Setup
+
+1. Install uv:
+
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. Clone the repository and install dependencies:
+
+   ```bash
+   git clone https://github.com/eoleedi/TimeTree-Exporter.git
+   cd TimeTree-Exporter
+   uv sync
+   ```
+
+3. Install pre-commit hooks:
+
+   ```bash
+   uv run pre-commit install
+   ```
+
+### Run Tests
+
+```bash
+uv run pytest tests
+```
+
+### Run Linter
+
+```bash
+uv run ruff check --fix .
+```
+
+### Run Formatter
+
+```bash
+uv run ruff format .
+```
 
 ## Support
 
@@ -87,7 +146,7 @@ If you think it's helpful, kindly support me!
 - [x] **Start Timezone**
 - [x] **End At**
 - [x] **End Timezone**
-- [ ] **Label ID**
+- [x] **Label ID**
 - [x] **Location**
 - [x] **Location Latitude**
 - [x] **Location Longitude**
